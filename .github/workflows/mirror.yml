@@ -1,0 +1,32 @@
+name: Mirror Telegram News
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch News Properly
+        run: |
+          mkdir -p public
+          # دریافت محتوا به همراه استایل‌ها
+          curl -L https://t.me/s/Akhbare_madrs > public/index.html
+          # تزریق CSS برای نظم دادن به ظاهر و فعال کردن قابلیت دانلود عکس‌ها
+          sed -i 's|</head>|<style>body{font-family:sans-serif;max-width:800px;margin:20px auto;padding:10px;} .tgme_widget_message_photo{display:block;margin:10px 0;} .tgme_widget_message_text{line-height:1.5;font-size:16px;} img{max-width:100%;border-radius:8px;}</style></head>|' public/index.html
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
